@@ -1,0 +1,51 @@
+# Beginner's Guide to Building a RAG System
+
+This guide explains the "Retrieval-Augmented Generation" (RAG) system we built.
+
+## What is RAG?
+RAG is a technique to give an AI (like ChatGPT or Llama) access to your own private data (like your F1 database) so it can answer questions about it correctly.
+Without RAG, the AI only knows what it was trained on. With RAG, we "augment" its knowledge with "retrieved" data.
+
+## The Workflow (Data Flow)
+
+Here is exactly what happens when you type a question:
+
+1.  **User Input** ([page.tsx](file:///e:/Projects/AI/firstragproject/app/page.tsx))
+    -   You type "Who won?" and click Send.
+    -   The frontend sends this message to our API `/api/chat`.
+
+2.  **Embedding Generation** ([route.ts](file:///e:/Projects/AI/firstragproject/app/api/chat/route.ts))
+    -   The server receives your text.
+    -   It sends your text to **OpenAI** (`text-embedding-3-small`).
+    -   OpenAI returns a "vector" (a list of 1536 numbers) that represents the *meaning* of your question.
+
+3.  **Vector Retrieval** ([route.ts](file:///e:/Projects/AI/firstragproject/app/api/chat/route.ts))
+    -   We take that vector and send it to **AstraDB**.
+    -   AstraDB compares your question's vector with all the vectors of F1 data we previously saved (seeded).
+    -   It finds the top 5 most similar pieces of text (chunks).
+    -   *Example retrieval*: "Max Verstappen won the 2023 championship..."
+
+4.  **Prompt Construction** ([route.ts](file:///e:/Projects/AI/firstragproject/app/api/chat/route.ts))
+    -   We stick those retrieved text chunks into a hidden instruction for the AI.
+    -   Prompt: "You are an F1 expert. Here is some context: [Max won 2023...]. Now answer: 'Who won?'"
+
+5.  **Response Generation** ([route.ts](file:///e:/Projects/AI/firstragproject/app/api/chat/route.ts))
+    -   We send this big combined prompt to **Groq**.
+    -   Groq (running Llama 3) reads the context and generates an answer.
+    -   Answer: "Max Verstappen won."
+
+6.  **Display** ([page.tsx](file:///e:/Projects/AI/firstragproject/app/page.tsx))
+    -   The server sends the text back to the frontend.
+    -   The frontend displays it in the chat bubble.
+
+## Project Structure
+
+-   [scripts/loadDb.ts](file:///e:/Projects/AI/firstragproject/scripts/loadDb.ts): (Run once) Scraped websites, created vectors, and saved them to the DB.
+-   [app/api/chat/route.ts](file:///e:/Projects/AI/firstragproject/app/api/chat/route.ts): The "Brain". Handles the 5 steps above.
+-   [app/page.tsx](file:///e:/Projects/AI/firstragproject/app/page.tsx): The "Face". The chat interface you see.
+
+## Key Technologies
+-   **AstraDB**: Stores the data as vectors.
+-   **OpenAI**: Turns text into vectors (Embedding).
+-   **Groq**: The "Talker" (LLM). Extremely fast inference.
+-   **Next.js**: The full-stack web framework holding it all together.

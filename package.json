@@ -6,12 +6,23 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "seed": "ts-node ./scripts/loadDb.ts",
     "lint": "eslint"
   },
   "dependencies": {
+    "@datastax/astra-db-ts": "^2.1.2",
+    "@langchain/community": "^1.0.7",
+    "@langchain/core": "^1.1.4",
+    "@langchain/textsplitters": "^1.0.1",
+    "dotenv": "^16.4.5",
+    "groq-sdk": "^0.37.0",
+    "langchain": "^1.1.5",
     "next": "16.0.10",
+    "openai": "^6.10.0",
+    "puppeteer": "^24.33.0",
     "react": "19.2.1",
-    "react-dom": "19.2.1"
+    "react-dom": "19.2.1",
+    "ts-node": "^10.9.2"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

@@ -1,65 +1,122 @@
-import Image from "next/image";
+"use client";
+
+import { useState } from "react";
+
+// Define the structure of a message
+type Message = {
+    role: "user" | "assistant";
+    content: string;
+};
 
 export default function Home() {
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
-  );
+    // State to store the history of messages
+    const [messages, setMessages] = useState<Message[]>([
+        { role: "assistant", content: "Hello! ask me anything about Formula One." },
+    ]);
+
+    // State to store the current input from the user
+    const [input, setInput] = useState("");
+
+    // State to show a loading indicator while fetching the response
+    const [isLoading, setIsLoading] = useState(false);
+
+    // Function to handle sending a message
+    const handleSend = async () => {
+        if (!input.trim()) return;
+
+        // 1. Add the user's message to the state so it appears in the UI immediately
+        const userMessage: Message = { role: "user", content: input };
+        setMessages((prev) => [...prev, userMessage]);
+        setInput(""); // Clear the input box
+        setIsLoading(true);
+
+        try {
+            // 2. Send the message history to our backend API
+            const response = await fetch("/api/chat", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    messages: [...messages, userMessage],
+                }),
+            });
+
+            // 3. Parse the response from the backend
+            const data = await response.json();
+
+            if (response.ok) {
+                // 4. Add the AI's response to the state
+                setMessages((prev) => [...prev, data]);
+            } else {
+                console.error("Error from backend:", data.error);
+                // Optionally show an error toast or alert here
+            }
+        } catch (error) {
+            console.error("Error sending message:", error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    return (
+        <main className="flex flex-col min-h-screen items-center justify-center p-4 bg-gray-50 text-gray-800 font-sans">
+            <div className="w-full max-w-2xl bg-white shadow-xl rounded-lg overflow-hidden flex flex-col h-[80vh]">
+
+                {/* Header */}
+                <header className="bg-red-600 p-4 text-white text-center font-bold text-xl uppercase tracking-wider">
+                    F1 RAG Chatbot
+                </header>
+
+                {/* Messages Area */}
+                <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                    {messages.map((msg, index) => (
+                        <div
+                            key={index}
+                            className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"
+                                }`}
+                        >
+                            <div
+                                className={`max-w-[80%] rounded-2xl px-4 py-2 text-sm ${msg.role === "user"
+                                    ? "bg-red-600 text-white rounded-br-none"
+                                    : "bg-gray-100 text-gray-800 rounded-bl-none border border-gray-200"
+                                    }`}
+                            >
+                                {msg.content}
+                            </div>
+                        </div>
+                    ))}
+                    {isLoading && (
+                        <div className="flex justify-start">
+                            <div className="bg-gray-100 text-gray-500 rounded-2xl px-4 py-2 text-sm italic">
+                                Thinking...
+                            </div>
+                        </div>
+                    )}
+                </div>
+
+                {/* Input Area */}
+                <div className="p-4 border-t border-gray-100 bg-gray-50">
+                    <div className="flex gap-2">
+                        <input
+                            type="text"
+                            value={input}
+                            onChange={(e) => setInput(e.target.value)}
+                            onKeyDown={(e) => e.key === "Enter" && handleSend()}
+                            placeholder="Ask about F1..."
+                            className="flex-1 border border-gray-300 rounded-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all shadow-sm"
+                            disabled={isLoading}
+                        />
+                        <button
+                            onClick={handleSend}
+                            disabled={isLoading}
+                            className="bg-red-600 hover:bg-red-700 text-white rounded-full p-2 px-6 font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+                        >
+                            Send
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    );
 }
