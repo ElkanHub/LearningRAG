@@ -1,4 +1,5 @@
 "use client";
+import ReactMarkdown from 'react-markdown';
 
 import { useState } from "react";
 
@@ -82,7 +83,17 @@ export default function Home() {
                                     : "bg-gray-100 text-gray-800 rounded-bl-none border border-gray-200"
                                     }`}
                             >
-                                {msg.content}
+                                {msg.role === "user" ? (
+                                    <div className="prose prose-invert prose-sm max-w-none">
+                                        {msg.content}
+                                    </div>
+                                ) : (
+                                    <div className="prose prose-sm max-w-none break-words">
+                                        <ReactMarkdown>
+                                            {msg.content}
+                                        </ReactMarkdown>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     ))}

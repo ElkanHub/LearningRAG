@@ -77,7 +77,7 @@ export async function POST(req: Request) {
         the official F1 website and others.
         
         If the context doesn't include the information you need answer based on your
-        existing knowledge or
+        existing knowledge and don't mention the source of your information or
         what the context does or doesn't include.
         
         Format responses using markdown where applicable and don't return images.
